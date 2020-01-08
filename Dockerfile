@@ -9,7 +9,7 @@ ENV TZ Asia/Shanghai
 ARG USE_CHINA_NPM_REGISTRY=0;
 ARG PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1;
 
-RUN apt-get update && apt-get install -yq libgconf-2-4 apt-transport-https git dumb-init --no-install-recommends && apt-get clean \
+RUN apt-get update && apt-get install -yq libgconf-2-4 apt-transport-https dumb-init --no-install-recommends && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -30,12 +30,16 @@ RUN if [ "$PUPPETEER_SKIP_CHROMIUM_DOWNLOAD" = 0 ]; then \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* \
   && apt-get purge --auto-remove -y wget\
-  && rm -rf /src/*.deb \
-  && npm install --production; \
-  else \
-  export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true && \
-  npm install --production; \
+  && rm -rf /src/*.deb; \
   fi;
+
+RUN if [ "$PUPPETEER_SKIP_CHROMIUM_DOWNLOAD" = 0 ]; then export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true; fi; \
+  apt-get update && apt-get install -y git --no-install-recommends \
+  && npm install --production \
+  && npm cache clean --force \
+  && apt-get purge --auto-remove -y git \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
 
 COPY . /app
 
